@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday Surprise!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            background-color: #050510; 
+            color: white; 
+            font-family: 'Poppins', sans-serif; 
+            overflow: hidden; 
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* --- KANVAS KEMBANG API --- */
+        #fireworks-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1; 
+        }
+
+        /* --- LAYER INTRO (Tombol, Hitung Mundur, Ucapan) --- */
+        #intro-layer {
+            position: absolute;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        #start-btn {
+            padding: 15px 35px;
+            font-size: 1.2em;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            color: #fff;
+            background: rgba(255, 42, 133, 0.2);
+            border: 2px solid #ff2a85;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 15px #ff2a85, inset 0 0 10px #ff2a85;
+            transition: all 0.3s ease;
+            pointer-events: auto;
+        }
+
+        #start-btn:hover {
+            background: #ff2a85;
+            box-shadow: 0 0 25px #ff2a85;
+            transform: scale(1.05);
+        }
+
+        #countdown-display {
+            font-size: 6em;
+            font-weight: 700;
+            color: #ffd1dc;
+            text-shadow: 0 0 20px #ff2a85, 0 0 40px #ff2a85;
+            display: none;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        #greeting-display {
+            font-size: 3.5em;
+            font-weight: 700;
+            text-align: center;
+            color: #fff;
+            text-shadow: 0 0 15px #ff2a85, 0 0 30px #ff2a85, 0 0 45px #ff2a85;
+            display: none;
+            opacity: 1;
+            transition: opacity 1s ease-in-out;
+            padding: 0 20px;
+        }
+
+        /* --- CONTAINER PESAN BERGULIR --- */
+        #message-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .neon-box {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            background: rgba(20, 0, 20, 0.6);
+            border: 2px solid #ff2a85;
+            border-radius: 40px;
+            padding: 10px 20px;
+            box-shadow: 0 0 12px #ff2a85, inset 0 0 8px #ff2a85;
+            max-width: 85%;
+            opacity: 0; /* Mulai dengan transparan */
+            /* Animasi jalan dari bawah ke atas */
+            animation: scrollUp 15s linear forwards; 
+            pointer-events: auto;
+        }
+
+        .neon-box img {
+            width: 40px;
+            height: 40px;
+            border-radius: 5px; /* Dibuat agak kotak seperti di foto */
+            object-fit: cover;
+            margin-right: 15px;
+            border: 1px solid #ff2a85;
+            box-shadow: 0 0 8px #ff2a85;
+        }
+
+        .neon-box span {
+            font-family: 'Dancing Script', cursive;
+            font-size: 1.2em;
+            color: #ffd1dc;
+            text-shadow: 0 0 5px #ff2a85;
+        }
+
+        /* Kelas untuk posisi kiri, kanan, tengah */
+        .align-left { left: 5%; }
+        .align-right { right: 5%; }
+        .align-center { left: 50%; transform: translateX(-50%); }
+
+        /* Keyframes untuk jalan ke atas dan menghilang */
+        @keyframes scrollUp {
+            0% { top: 110%; opacity: 0; }
+            5% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: -20%; opacity: 0; }
+        }
+
+        /* --- TOMBOL CLOSE --- */
+        #close-wrapper {
+            position: absolute;
+            bottom: 30px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            z-index: 30;
+            opacity: 0; /* Tersembunyi di awal */
+            transition: opacity 1s ease-in-out;
+            pointer-events: none;
+        }
+
+        #close-btn {
+            padding: 8px 30px;
+            font-size: 1em;
+            font-weight: 600;
+            color: #fff;
+            background: rgba(0,0,0,0.5);
+            border: 2px solid #ff2a85;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 0 10px #ff2a85, inset 0 0 5px #ff2a85;
+            pointer-events: auto;
+        }
+        #close-btn:hover { background: #ff2a85; }
+
+        @media (max-width: 600px) {
+            #greeting-display { font-size: 2.5em; }
+            .neon-box span { font-size: 1em; }
+            .neon-box { padding: 8px 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="fireworks-canvas"></canvas>
+
+    <div id="intro-layer">
+        <button id="start-btn">Buka Kejutan 🎁</button>
+        <div id="countdown-display">3</div>
+        <div id="greeting-display">HAPPY BIRTHDAY<br>SAYANG! 🎉</div>
+    </div>
+
+    <div id="message-container"></div>
+
+    <div id="close-wrapper">
+        <button id="close-btn">CLOSE</button>
+    </div>
+
+    <audio id="music" src="musik.mp3"></audio>
+
+    <script>
+        // ==========================================
+        // 1. DATA PESAN (TAMBAHKAN SEBANYAK MUNGKIN DI SINI)
+        // ==========================================
+        const wishMessages = [
+            { text: "You mean everything to me ✨", img: "foto1.JPG", pos: "align-left" },
+            { text: "Memilikimu adalah kado terindahku ❤️", img: null, pos: "align-right" },
+            { text: "Waktu berlalu, rasa ini tetap sama.", img: "foto2.JPG", pos: "align-left" },
+            { text: "Always be mine, forever. 💕", img: null, pos: "align-right" },
+            { text: "Terima kasih sudah jadi yang terbaik!", img: "foto3.JPG", pos: "align-left" },
+            { text: "Semoga harimu seindah senyummu 😊", img: null, pos: "align-right" },
+            { text: "I love you to the moon and back 🌙", img: null, pos: "align-center" },
+            { text: "Semoga semua impianmu tercapai tahun ini 🌟", img: "foto1.JPG", pos: "align-left" },
+            { text: "Aku akan selalu ada buat kamu 🥰", img: null, pos: "align-right" },
+            { text: "Sehat selalu dan bahagia terus ya! 💖", img: null, pos: "align-left" },
+            { text: "Can't wait to make more memories with you 📸", img: "foto2.JPG", pos: "align-right" },
+            { text: "You are my sunshine ☀️", img: null, pos: "align-left" },
+            { text: "Happy Level Up sayangku! 🎂", img: null, pos: "align-center" }
+        ];
+        // Cara tambah: { text: "Pesanmu", img: "namafoto.jpg" (atau null kalau tanpa foto), pos: "align-left/right/center" }
+
+
+        // ==========================================
+        // 2. LOGIKA KEMBANG API
+        // ==========================================
+        const canvas = document.getElementById("fireworks-canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        window.addEventListener("resize", () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x; this.y = y; this.color = color;
+                this.radius = Math.random() * 2 + 1;
+                this.velocity = { x: (Math.random() - 0.5) * 8, y: (Math.random() - 0.5) * 8 };
+                this.friction = 0.98; this.gravity = 0.05; this.opacity = 1;
+            }
+            draw() {
+                ctx.save(); ctx.globalAlpha = this.opacity; ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color; ctx.shadowBlur = 10; ctx.shadowColor = this.color;
+                ctx.fill(); ctx.restore();
+            }
+            update() {
+                this.velocity.x *= this.friction; this.velocity.y *= this.friction; this.velocity.y += this.gravity;
+                this.x += this.velocity.x; this.y += this.velocity.y; this.opacity -= 0.015;
+            }
+        }
+
+        let particles = [];
+        const colors = ['#ff2a85', '#ff7eb3', '#8a2be2', '#00e5ff', '#ffffff'];
+
+        function createFirework(x, y) {
+            for (let i = 0; i < 100; i++) {
+                particles.push(new Particle(x, y, colors[Math.floor(Math.random() * colors.length)]));
+            }
+        }
+
+        function animateFireworks() {
+            requestAnimationFrame(animateFireworks);
+            ctx.fillStyle = "rgba(5, 5, 16, 0.2)"; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((particle, index) => {
+                if (particle.opacity <= 0) particles.splice(index, 1);
+                else { particle.update(); particle.draw(); }
+            });
+        }
+
+        setInterval(() => { createFirework(Math.random() * canvas.width, Math.random() * (canvas.height / 2)); }, 800);
+        canvas.addEventListener("click", (e) => { createFirework(e.clientX, e.clientY); });
+        animateFireworks();
+
+        // ==========================================
+        // 3. LOGIKA HITUNG MUNDUR & PESAN BERGULIR
+        // ==========================================
+        const startBtn = document.getElementById('start-btn');
+        const countdownDisplay = document.getElementById('countdown-display');
+        const greetingDisplay = document.getElementById('greeting-display');
+        const messageContainer = document.getElementById('message-container');
+        const closeWrapper = document.getElementById('close-wrapper');
+        const audio = document.getElementById('music');
+
+        startBtn.addEventListener('click', () => {
+            startBtn.style.display = 'none';
+            audio.play().catch(e => console.log("Audio diblokir"));
+            countdownDisplay.style.display = 'block';
+            
+            let count = 3;
+            countdownDisplay.innerText = count;
+
+            let timer = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdownDisplay.style.transform = 'scale(0.7)';
+                    setTimeout(() => { countdownDisplay.innerText = count; countdownDisplay.style.transform = 'scale(1)'; }, 100);
+                } else {
+                    clearInterval(timer);
+                    countdownDisplay.style.display = 'none';
+                    showGreeting();
+                }
+            }, 1000);
+        });
+
+        function showGreeting() {
+            greetingDisplay.style.display = 'block';
+            setTimeout(() => {
+                greetingDisplay.style.opacity = '0'; 
+                setTimeout(() => {
+                    greetingDisplay.style.display = 'none';
+                    startScrollingMessages(); // Jalankan pesan bergulir
+                    
+                    // Tampilkan tombol close setelah beberapa detik
+                    setTimeout(() => { closeWrapper.style.opacity = '1'; }, 3000);
+                }, 1000); 
+            }, 3000);
+        }
+
+        function startScrollingMessages() {
+            wishMessages.forEach((msg, index) => {
+                // Buat elemen kotak neon baru
+                const box = document.createElement('div');
+                box.className = `neon-box ${msg.pos}`;
+                
+                // Isi kotaknya (Foto jika ada + Teks)
+                let innerHTML = '';
+                if (msg.img) {
+                    innerHTML += `<img src="${msg.img}" alt="foto">`;
+                }
+                innerHTML += `<span>${msg.text}</span>`;
+                box.innerHTML = innerHTML;
+
+                // Atur jeda waktu (delay) agar muncul berurutan
+                // Setiap kotak akan muncul selang 2.5 detik
+                box.style.animationDelay = `${index * 2.5}s`;
+
+                // Masukkan ke dalam container
+                messageContainer.appendChild(box);
+            });
+        }
+
+        // Tombol Close
+        document.getElementById('close-btn').addEventListener('click', () => {
+            messageContainer.innerHTML = ''; // Hapus semua pesan
+            closeWrapper.style.opacity = '0';
+            setTimeout(() => { startBtn.style.display = 'block'; }, 1000);
+        });
+    </script>
+</body>
+</html>
